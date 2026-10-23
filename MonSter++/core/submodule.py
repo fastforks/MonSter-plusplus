@@ -592,3 +592,15 @@ class Propagation_prob(nn.Module):
 
 
         return prob_volume_propa
+
+def build_gwc_volume_fast(refimg_fea, targetimg_fea, maxdisp, num_groups, channels_last=True):
+    """Same values as build_gwc_volume, written straight into an NDHWC (channels_last_3d) volume if requested."""
+    B, C, H, W = refimg_fea.shape
+    cpg = C // num_groups
+    mf = torch.channels_last_3d if channels_last else torch.contiguous_format
+    volume = refimg_fea.new_zeros([B, num_groups, maxdisp, H, W]).contiguous(memory_format=mf)
+    for i in range(maxdisp):
+        a = refimg_fea[:, :, :, i:]
+        bb = targetimg_fea[:, :, :, :W - i]
+        volume[:, :, i, :, i:] = (a * bb).view(B, num_groups, cpg, H, W - i).mean(dim=2)
+    return volume

@@ -333,7 +333,7 @@ class Feature(SubModule):
         chans = [16, 24, 32, 96, 160]
         self.conv_stem = model.conv_stem
         self.bn1 = model.bn1
-        self.act1 = model.act1
+        self.act1 = getattr(model, 'act1', torch.nn.Identity())  # baseline-compat: timm>=0.9 folds act1 into bn1
 
         self.block0 = torch.nn.Sequential(*model.blocks[0:layers[0]])
         self.block1 = torch.nn.Sequential(*model.blocks[layers[0]:layers[1]])
